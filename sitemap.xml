@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- 公開後に https://<ユーザー名>.github.io/<リポジトリ名>/ に置換してください -->
+  <url><loc>https://brotherinendroll.github.io/</loc></url>
+  <url><loc>https://brotherinendroll.github.io/about.html</loc></url>
+  <url><loc>https://brotherinendroll.github.io/privacy.html</loc></url>
+  <url><loc>https://brotherinendroll.github.io/contact.html</loc></url>
+  <url><loc>https://brotherinendroll.github.io/terms.html</loc></url>
+  <url><loc>https://brotherinendroll.github.io/var-generator/</loc></url>
+  <url><loc>https://brotherinendroll.github.io/kikori-game/</loc></url>
+</urlset>

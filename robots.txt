@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://brotherinendroll.github.io/sitemap.xml

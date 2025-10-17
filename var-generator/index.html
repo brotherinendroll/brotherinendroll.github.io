@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>VAR確認中ジェネレーター</title>
+  <meta name="description" content="テレビ中継風の『〇〇確認中 / Checking』画像を作れるジェネレーター。PNGダウンロード・サイズ変更対応。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
+  <!-- Google AdSense Auto Ads -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-brotherinendroll" crossorigin="anonymous"></script>
+  <style>
+    :root{--bg:#0b0b0d;--text:#ffffff;}
+    *{box-sizing:border-box}
+    html,body{height:100%;background:#0b0b0d;color:var(--text);font-family:'Noto Sans JP', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji';}
+    body{margin:0;display:grid;grid-template-rows:auto auto 1fr;}
+    header{padding:12px 20px;border-bottom:1px solid #1f1f22;background:#0f0f12;display:flex;gap:16px;align-items:center;justify-content:space-between}
+    .brand{font-size:18px;margin:0;font-weight:900;letter-spacing:0.02em}
+    nav a{color:#cfcfd7;text-decoration:none;margin-left:12px;font-size:14px}
+    nav a:hover{text-decoration:underline}
+    .panel{padding:16px 20px;display:grid;grid-template-columns:1fr;gap:12px}
+    .row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+    label{font-size:14px;color:#cfcfd7}
+    input[type='text']{flex:1;min-width:200px;background:#111217;border:1px solid #2a2b34;color:#fff;border-radius:10px;padding:12px 14px;font-size:16px;outline:none}
+    select{background:#111217;border:1px solid #2a2b34;color:#fff;border-radius:10px;padding:10px 12px;font-size:14px}
+    button{background:#1a1b25;border:1px solid #2a2b34;color:#fff;border-radius:12px;padding:10px 14px;font-weight:700;cursor:pointer}
+    button:hover{filter:brightness(1.1)}
+    main{padding:16px 20px}
+    .stage{position:relative;max-width:min(92vw,1200px);margin-inline:auto;border-radius:16px;overflow:hidden;background:#000;box-shadow:0 8px 40px rgba(0,0,0,.45);}
+    canvas{width:100%;height:auto;display:block}
+    .credit{color:#8e8e98;font-size:12px;text-align:center;margin:10px 0 40px}
+    footer{border-top:1px solid #1f1f22;color:#a7a7af;padding:12px 20px;text-align:center}
+  </style>
+</head>
+<body>
+  <header>
+    <h1 class="brand">VAR確認中ジェネレーター</h1>
+    <nav>
+      <a href="./">Home</a>
+      <a href="./about.html">About</a>
+      <a href="./privacy.html">Privacy</a>
+      <a href="./contact.html">Contact</a>
+    </nav>
+  </header>
+
+  <section class="panel" aria-label="コントロール">
+    <div class="row">
+      <label for="topic">上段の〇〇（例：VAR）</label>
+      <input id="topic" type="text" value="VAR" maxlength="18" placeholder="例：VAR / オフサイド など" />
+      <div class="toggle"><input type="checkbox" id="badge" checked><label for="badge">左上のVARバッジを表示</label></div>
+    </div>
+    <div class="row">
+      <label for="size">画像サイズ</label>
+      <select id="size">
+        <option value="1280x720">1280×720（HD/16:9）</option>
+        <option value="1920x1080">1920×1080（Full HD/16:9）</option>
+        <option value="1080x1080">1080×1080（正方形）</option>
+        <option value="1080x1920">1080×1920（縦/ストーリーズ）</option>
+      </select>
+      <button id="download">PNGをダウンロード</button>
+      <button id="copy">クリップボードにコピー</button>
+    </div>
+  </section>
+
+  <main>
+    <div class="stage">
+      <canvas id="c"></canvas>
+    </div>
+    <div class="credit">背景は丸みを帯びた赤黒ストライプのグラデーション。英語行は "Checking" 固定。下段テキストは表示しません。</div>
+  </main>
+
+  <footer>© 2025 Brotherinendroll ｜ <a href="https://x.com/THIF_417" target="_blank" rel="noopener">X(Twitter)</a></footer>
+
+  <script>
+    var canvas = document.getElementById('c');
+    var ctx = canvas.getContext('2d');
+
+    var state = { topic: 'VAR', showBadge: true, width: 1280, height: 720 };
+
+    var topicInput = document.getElementById('topic');
+    var badgeInput = document.getElementById('badge');
+    var sizeSelect = document.getElementById('size');
+    var dlBtn = document.getElementById('download');
+    var copyBtn = document.getElementById('copy');
+
+    topicInput.addEventListener('input', function(){ state.topic = topicInput.value || ' '; draw(); });
+    badgeInput.addEventListener('change', function(){ state.showBadge = badgeInput.checked; draw(); });
+    sizeSelect.addEventListener('change', function(){
+      var sizeValues = sizeSelect.value.split('x');
+      var w = Number(sizeValues[0]);
+      var h = Number(sizeValues[1]);
+      state.width = w; state.height = h; resizeCanvas(); draw();
+    });
+
+    dlBtn.addEventListener('click', function(){
+      var a = document.createElement('a');
+      a.download = (state.topic || 'VAR') + '_kakuninchu.png';
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+    });
+
+    copyBtn.addEventListener('click', function(){
+      try{ if(canvas.toBlob) {
+        canvas.toBlob(function(blob){ 
+          if (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {
+            navigator.clipboard.write([ new ClipboardItem({ 'image/png': blob }) ])
+              .then(function(){ copyBtn.textContent = 'コピーしました！'; setTimeout(function(){ copyBtn.textContent = 'クリップボードにコピー'; }, 1500); })
+              .catch(function(e){ alert('コピーに失敗しました: ' + e.message); });
+          } else {
+            var url = URL.createObjectURL(blob); window.open(url, '_blank');
+          }
+        });
+      } else {
+        alert('この環境ではコピーがサポートされません。ダウンロードをご利用ください。');
+      } } catch(e){ alert('コピーに失敗しました: ' + e.message); }
+    });
+
+    function resizeCanvas(){
+      var dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
+      canvas.width = state.width * dpr;
+      canvas.height = state.height * dpr;
+      canvas.style.width = state.width + 'px';
+      canvas.style.height = state.height + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function drawBackground(){
+      var W = state.width, H = state.height;
+      ctx.fillStyle = '#000'; ctx.fillRect(0,0,W,H);
+
+      var cx = -W * 0.12; var cy = H * 1.05;
+      var bandCount = 4;
+      var bandWidth = Math.max(H * 0.22, 130);
+      var gap = Math.max(H * 0.05, 30);
+      var start = -0.95 * Math.PI; var end = -0.02 * Math.PI;
+
+      var radiusBase = Math.sqrt(W*W*1.44 + H*H*1.44);
+
+      for(var i=0;i<bandCount;i++){
+        var outerR = radiusBase - i*(bandWidth + gap);
+        var innerR = outerR - bandWidth;
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, outerR, start, end, false);
+        ctx.arc(cx, cy, innerR, end, start, true);
+        ctx.closePath(); ctx.clip();
+
+        var g = ctx.createRadialGradient(cx, cy, innerR*0.98, cx, cy, outerR*1.02);
+        g.addColorStop(0.00, '#ff1a00');
+        g.addColorStop(0.55, '#d10a00');
+        g.addColorStop(0.86, 'rgba(255,0,0,0.35)');
+        g.addColorStop(0.98, 'rgba(0,0,0,0.0)');
+        ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.shadowColor = 'rgba(0,0,0,0.8)';
+        ctx.shadowBlur = Math.max(20, bandWidth*0.25);
+        ctx.shadowOffsetY = 0;
+        var dark = ctx.createRadialGradient(cx, cy, innerR, cx, cy, outerR);
+        dark.addColorStop(0, 'rgba(0,0,0,0.0)'); dark.addColorStop(1, 'rgba(0,0,0,0.6)');
+        ctx.fillStyle = dark; ctx.fillRect(0,0,W,H);
+        ctx.restore();
+      }
+
+      var vg = ctx.createRadialGradient(W*0.15, H*0.9, Math.min(W,H)*0.1, W/2, H/2, Math.max(W,H)*1.2);
+      vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.75)');
+      ctx.fillStyle = vg; ctx.fillRect(0,0,W,H);
+    }
+
+    function drawBadge(){
+      if(!state.showBadge) return;
+      var pad = Math.max(12, Math.floor(state.width*0.02));
+      var x = pad, y = pad, w = Math.max(84, Math.floor(state.width*0.11)), h = Math.max(50, Math.floor(w*0.6));
+      var r = Math.min(12, h*0.25);
+      ctx.lineWidth = 4; ctx.strokeStyle = '#fff';
+      roundRect(ctx, x, y, w, h, r); ctx.stroke();
+      ctx.font = 'bold ' + Math.floor(h*0.46) + 'px Montserrat, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#fff'; ctx.fillText('VAR', x + w/2, y + h/2 + 1);
+    }
+
+    function drawText(){
+      var W = state.width, H = state.height, topic = state.topic;
+      var main = (topic ? topic : '').replace(/^\s+|\s+$/g,'') + '確認中';
+      var maxWidth = W * 0.88;
+      var size = Math.floor(H * 0.16);
+      ctx.font = '900 ' + size + "px 'Noto Sans JP', sans-serif";
+      while(ctx.measureText(main).width > maxWidth && size > 10){
+        size -= 2; ctx.font = '900 ' + size + "px 'Noto Sans JP', sans-serif";
+      }
+      var x = W/2; var y = H*0.45;
+      ctx.textAlign = 'center'; ctx.lineJoin = 'round';
+      ctx.lineWidth = Math.max(6, Math.floor(size*0.08));
+      ctx.strokeStyle = 'rgba(0,0,0,0.7)'; ctx.strokeText(main, x, y);
+      ctx.fillStyle = '#ffffff'; ctx.fillText(main, x, y);
+
+      var sub = 'Checking';
+      var sSize = Math.max(26, Math.floor(size*0.3));
+      ctx.font = '700 ' + sSize + 'px Montserrat, sans-serif';
+      ctx.textBaseline = 'top';
+      ctx.shadowColor = 'rgba(0,0,0,0.45)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 1.5;
+      var subY = y + sSize * 0.8 + 120;
+      ctx.fillText(sub, x, subY);
+      ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+    }
+
+    function roundRect(ctx, x, y, w, h, r){
+      ctx.beginPath();
+      ctx.moveTo(x+r, y);
+      ctx.arcTo(x+w, y, x+w, y+h, r);
+      ctx.arcTo(x+w, y+h, x, y+h, r);
+      ctx.arcTo(x, y+h, x, y, r);
+      ctx.arcTo(x, y, x+w, y, r);
+      ctx.closePath();
+    }
+
+    function draw(){
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      drawBackground();
+      drawBadge();
+      drawText();
+    }
+
+    function init(){
+      var sizeValues = sizeSelect.value.split('x');
+      var w = Number(sizeValues[0]); var h = Number(sizeValues[1]);
+      state.width = w; state.height = h;
+      resizeCanvas(); draw();
+    }
+    window.addEventListener('load', init);
+    window.addEventListener('resize', function(){ resizeCanvas(); draw(); });
+  </script>
+</body>
+</html>
